@@ -13,9 +13,10 @@ interface JobCardProps {
 
 export default function JobCard({ job, isSaved, matchScore, onView, onSave, onApply }: JobCardProps) {
     const getScoreColor = (score: number) => {
-        if (score >= 80) return 'var(--color-accent)';
-        if (score >= 50) return 'var(--color-warning)';
-        return '#666';
+        if (score >= 80) return '#2D5016'; // Green
+        if (score >= 60) return '#92400E'; // Amber
+        if (score >= 40) return '#111';    // Neutral
+        return '#666';                     // Subtle Grey
     };
 
     return (
@@ -24,7 +25,7 @@ export default function JobCard({ job, isSaved, matchScore, onView, onSave, onAp
                 <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-1)' }}>
                         <h3 style={{ margin: 0 }}>{job.title}</h3>
-                        {matchScore !== undefined && matchScore > 0 && (
+                        {matchScore !== undefined && (
                             <span className="badge" style={{
                                 backgroundColor: getScoreColor(matchScore),
                                 color: 'white',

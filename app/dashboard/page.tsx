@@ -20,38 +20,39 @@ export default function Dashboard() {
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [hasPreferences, setHasPreferences] = useState(false);
+    const [userPrefs, setUserPrefs] = useState<UserPreferences | null>(null);
 
     // Filter states
     const [search, setSearch] = useState('');
-    const [locationPref, setLocationPref] = useState('');
-    const [modePref, setModePref] = useState('');
-    const [experiencePref, setExperiencePref] = useState('');
-    const [sourcePref, setSourcePref] = useState('');
+    const [locationFilter, setLocationFilter] = useState('');
+    const [modeFilter, setModeFilter] = useState('');
+    const [experienceFilter, setExperienceFilter] = useState('');
+    const [sourceFilter, setSourceFilter] = useState('');
     const [sort, setSort] = useState('match');
+    const [showOnlyAboveThreshold, setShowOnlyAboveThreshold] = useState(false);
 
     useEffect(() => {
         try {
-            // Load settings and calculate initial scores
-            const savedPrefs = localStorage.getItem('userPreferences');
+            const savedPrefs = localStorage.getItem('jobTrackerPreferences');
             let prefs: UserPreferences = {
-                keywords: '',
-                location: '',
-                mode: '',
-                experience: ''
+                roleKeywords: '',
+                preferredLocations: [],
+                preferredMode: [],
+                experienceLevel: '',
+                skills: '',
+                minMatchScore: 40
             };
 
             if (savedPrefs) {
-                try {
-                    const parsed = JSON.parse(savedPrefs);
-                    if (parsed && typeof parsed === 'object') {
-                        prefs = { ...prefs, ...parsed };
-                    }
-                } catch (e) {
-                    console.error('Failed to parse preferences', e);
-                }
+                const parsed = JSON.parse(savedPrefs);
+                prefs = { ...prefs, ...parsed };
+                setHasPreferences(true);
+                setUserPrefs(prefs);
+            } else {
+                setHasPreferences(false);
             }
 
-            // Map jobs with scores
             const jobsWithScores = (jobs || []).map(job => ({
                 ...job,
                 matchScore: calculateMatchScore(job, prefs)
@@ -59,14 +60,9 @@ export default function Dashboard() {
 
             setAllJobs(jobsWithScores);
 
-            // Load saved jobs
             const saved = localStorage.getItem('favoriteJobIds');
             if (saved) {
-                try {
-                    setSavedJobIds(JSON.parse(saved));
-                } catch (e) {
-                    console.error('Failed to parse saved jobs', e);
-                }
+                setSavedJobIds(JSON.parse(saved));
             }
         } catch (error) {
             console.error('Dashboard initialization error:', error);
@@ -83,12 +79,14 @@ export default function Dashboard() {
                 job.title.toLowerCase().includes(search.toLowerCase()) ||
                 job.company.toLowerCase().includes(search.toLowerCase());
 
-            const matchesLocation = !locationPref || job.location === locationPref;
-            const matchesMode = !modePref || job.mode === modePref;
-            const matchesExperience = !experiencePref || job.experience === experiencePref;
-            const matchesSource = !sourcePref || job.source === sourcePref;
+            const matchesLocation = !locationFilter || job.location === locationFilter;
+            const matchesMode = !modeFilter || job.mode === modeFilter;
+            const matchesExperience = !experienceFilter || job.experience === experienceFilter;
+            const matchesSource = !sourceFilter || job.source === sourceFilter;
 
-            return matchesSearch && matchesLocation && matchesMode && matchesExperience && matchesSource;
+            const matchesThreshold = !showOnlyAboveThreshold || job.matchScore >= (userPrefs?.minMatchScore || 0);
+
+            return matchesSearch && matchesLocation && matchesMode && matchesExperience && matchesSource && matchesThreshold;
         });
 
         // Sorting
@@ -98,12 +96,18 @@ export default function Dashboard() {
             result.sort((a, b) => a.postedDaysAgo - b.postedDaysAgo);
         } else if (sort === 'oldest') {
             result.sort((a, b) => b.postedDaysAgo - a.postedDaysAgo);
+        } else if (sort === 'salary') {
+            const extractSalary = (s: string) => {
+                const match = s.match(/(\d+)/);
+                return match ? parseInt(match[0]) : 0;
+            };
+            result.sort((a, b) => extractSalary(b.salaryRange) - extractSalary(a.salaryRange));
         } else if (sort === 'title') {
             result.sort((a, b) => a.title.localeCompare(b.title));
         }
 
         setFilteredJobs(result);
-    }, [allJobs, isLoading, search, locationPref, modePref, experiencePref, sourcePref, sort]);
+    }, [allJobs, isLoading, search, locationFilter, modeFilter, experienceFilter, sourceFilter, sort, showOnlyAboveThreshold, userPrefs]);
 
     const handleSave = (id: string) => {
         const newSaved = savedJobIds.includes(id)
@@ -126,11 +130,11 @@ export default function Dashboard() {
     if (isLoading) {
         return (
             <div className="main-content">
-                <ContextHeader title="Dashboard" subtitle="Loading your personalized feed..." />
+                <ContextHeader title="Dashboard" subtitle="Synchronizing match engine..." />
                 <div className="workspace-container">
                     <div className="primary-workspace">
                         <div className="card card-lg" style={{ textAlign: 'center', padding: 'var(--space-5)' }}>
-                            <p className="text-muted">Analyzing 60+ job opportunities...</p>
+                            <p className="text-muted">Computing scores for 60+ roles...</p>
                         </div>
                     </div>
                 </div>
@@ -142,18 +146,38 @@ export default function Dashboard() {
         <div className="main-content">
             <ContextHeader
                 title="Dashboard"
-                subtitle="Manage and track your active job matches."
+                subtitle="Your intelligent job discovery workspace."
             />
             <div className="workspace-container">
                 <div className="primary-workspace">
-                    <FilterBar
-                        onSearch={setSearch}
-                        onLocationChange={setLocationPref}
-                        onModeChange={setModePref}
-                        onExperienceChange={setExperiencePref}
-                        onSourceChange={setSourcePref}
-                        onSortChange={setSort}
-                    />
+                    {!hasPreferences && (
+                        <div className="card" style={{ backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-accent)', marginBottom: 'var(--space-3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <p style={{ margin: 0, fontWeight: 500 }}>Set your preferences to activate intelligent matching.</p>
+                            <button className="btn btn-secondary" onClick={() => window.location.href = '/settings'} style={{ padding: '4px 12px', fontSize: '13px' }}>Configure</button>
+                        </div>
+                    )}
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
+                        <FilterBar
+                            onSearch={setSearch}
+                            onLocationChange={setLocationFilter}
+                            onModeChange={setModeFilter}
+                            onExperienceChange={setExperienceFilter}
+                            onSourceChange={setSourceFilter}
+                            onSortChange={setSort}
+                        />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', whiteSpace: 'nowrap', marginLeft: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
+                            <label className="switch" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 500 }}>
+                                <input
+                                    type="checkbox"
+                                    checked={showOnlyAboveThreshold}
+                                    onChange={(e) => setShowOnlyAboveThreshold(e.target.checked)}
+                                    style={{ accentColor: 'var(--color-accent)' }}
+                                />
+                                Show only matches above {userPrefs?.minMatchScore || 40}%
+                            </label>
+                        </div>
+                    </div>
 
                     {filteredJobs.length > 0 ? (
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--space-2)' }}>
@@ -171,19 +195,26 @@ export default function Dashboard() {
                         </div>
                     ) : (
                         <div className="empty-state card card-lg">
-                            <h3>No matches found.</h3>
+                            <h3>No roles match your criteria.</h3>
                             <p className="text-muted">
-                                Try adjusting your filters or search terms.
+                                Try adjusting your filters or lower the threshold in Settings.
                             </p>
+                            <button className="btn btn-secondary" onClick={() => {
+                                setSearch('');
+                                setLocationFilter('');
+                                setModeFilter('');
+                                setExperienceFilter('');
+                                setSourceFilter('');
+                                setShowOnlyAboveThreshold(false);
+                            }} style={{ marginTop: 'var(--space-2)' }}>Clear all filters</button>
                         </div>
                     )}
                 </div>
 
                 <SecondaryPanel
-                    title="Tracking Tips"
-                    description="Our engine will automatically surface the best opportunities based on your settings."
-                    prompt="Keep your preferences updated for better accuracy."
-                    onCopy={() => navigator.clipboard.writeText("Keep your preferences updated for better accuracy.")}
+                    title="Intelligence Engine"
+                    description="Matches are computed in real-time. High recency and LinkedIn sources receive a final +5 boost."
+                    prompt="Threshold: Only seeing roles above your comfort level."
                 />
             </div>
 

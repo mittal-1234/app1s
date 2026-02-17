@@ -18,8 +18,8 @@ export default function FilterBar({
     onSortChange
 }: FilterBarProps) {
     return (
-        <div className="card" style={{ marginBottom: 'var(--space-4)', padding: 'var(--space-3)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-3)' }}>
+        <div className="card" style={{ marginBottom: 'var(--space-4)', padding: 'var(--space-3)', flex: 1 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--space-3)' }}>
                 <div className="form-group">
                     <label>Search Jobs</label>
                     <input
@@ -77,9 +77,10 @@ export default function FilterBar({
                 <div className="form-group">
                     <label>Sort By</label>
                     <select onChange={(e) => onSortChange(e.target.value)}>
-                        <option value="match">Highest Match</option>
+                        <option value="match">Match Score</option>
                         <option value="latest">Latest First</option>
                         <option value="oldest">Oldest First</option>
+                        <option value="salary">Salary (High to Low)</option>
                         <option value="title">Title (A-Z)</option>
                     </select>
                 </div>
