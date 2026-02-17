@@ -9,7 +9,9 @@ const navLinks = [
     { href: '/saved', label: 'Saved' },
     { href: '/digest', label: 'Digest' },
     { href: '/settings', label: 'Settings' },
-    { href: '/proof', label: 'Proof' }
+    { href: '/proof', label: 'Proof' },
+    { href: '/jt/07-test', label: 'Test Checklist' },
+    { href: '/jt/08-ship', label: 'Ship' }
 ];
 
 export default function Navbar() {
