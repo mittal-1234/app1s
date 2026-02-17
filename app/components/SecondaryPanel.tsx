@@ -2,6 +2,7 @@ export default function SecondaryPanel({
     title,
     description,
     prompt,
+    children,
     onCopy,
     onBuild,
     onSuccess,
@@ -10,6 +11,7 @@ export default function SecondaryPanel({
     title: string;
     description: string;
     prompt?: string;
+    children?: React.ReactNode;
     onCopy?: () => void;
     onBuild?: () => void;
     onSuccess?: () => void;
@@ -48,6 +50,8 @@ export default function SecondaryPanel({
                         {prompt}
                     </div>
                 )}
+
+                {children}
 
                 <div style={{
                     display: 'flex',
