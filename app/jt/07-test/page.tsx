@@ -5,16 +5,16 @@ import ContextHeader from '../../components/ContextHeader';
 import SecondaryPanel from '../../components/SecondaryPanel';
 
 const TEST_ITEMS = [
-    { id: 'prefs_persist', label: 'Preferences persist after refresh' },
-    { id: 'match_score', label: 'Match score calculates correctly' },
-    { id: 'show_matches', label: '"Show only matches" toggle works' },
-    { id: 'save_persist', label: 'Save job persists after refresh' },
-    { id: 'apply_newdat', label: 'Apply opens in new tab' },
-    { id: 'status_persist', label: 'Status update persists after refresh' },
-    { id: 'status_filter', label: 'Status filter works correctly' },
-    { id: 'digest_top10', label: 'Digest generates top 10 by score' },
-    { id: 'digest_persist', label: 'Digest persists for the day' },
-    { id: 'no_console_errors', label: 'No console errors on main pages' }
+    { id: 'prefs_persist', label: 'Preferences persist after refresh', tooltip: 'Change filters, refresh page, check if values remain.' },
+    { id: 'match_score', label: 'Match score calculates correctly', tooltip: 'Verify points logic: Title(25), Desc(15), Loc(15), Mode(10), Exp(10), Skill(15), Recency(5), LinkedIn(5).' },
+    { id: 'show_matches', label: '"Show only matches" toggle works', tooltip: 'Toggle "Show only matches" and verify low-score jobs disappear.' },
+    { id: 'save_persist', label: 'Save job persists after refresh', tooltip: 'Save a job, refresh page, verify it is still saved.' },
+    { id: 'apply_newdat', label: 'Apply opens in new tab', tooltip: 'Click Apply, verify a new browser tab opens.' },
+    { id: 'status_persist', label: 'Status update persists after refresh', tooltip: 'Set status to Applied, refresh, verify status remains Applied.' },
+    { id: 'status_filter', label: 'Status filter works correctly', tooltip: 'Filter by Applied, ensure only Applied jobs are shown.' },
+    { id: 'digest_top10', label: 'Digest generates top 10 by score', tooltip: 'Generate digest, count items, verify they are high scoring.' },
+    { id: 'digest_persist', label: 'Digest persists for the day', tooltip: 'Refresh page, verify digest is not re-generated (same date/items).' },
+    { id: 'no_console_errors', label: 'No console errors on main pages', tooltip: 'Open DevTools (F12) -> Console. Check for red errors.' }
 ];
 
 export default function TestPage() {
@@ -80,6 +80,26 @@ export default function TestPage() {
                                     <span style={{ fontSize: '16px', color: checkedItems[item.id] ? 'var(--color-text)' : '#666' }}>
                                         {item.label}
                                     </span>
+                                    {item.tooltip && (
+                                        <span
+                                            title={item.tooltip}
+                                            style={{
+                                                fontSize: '12px',
+                                                color: '#999',
+                                                cursor: 'help',
+                                                border: '1px solid #ddd',
+                                                borderRadius: '50%',
+                                                width: '16px',
+                                                height: '16px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                marginLeft: 'auto'
+                                            }}
+                                        >
+                                            ?
+                                        </span>
+                                    )}
                                 </label>
                             ))}
                         </div>
