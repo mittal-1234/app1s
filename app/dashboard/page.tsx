@@ -32,6 +32,10 @@ export default function Dashboard() {
     const [sort, setSort] = useState('match');
     const [showOnlyAboveThreshold, setShowOnlyAboveThreshold] = useState(false);
 
+    const [statusMap, setStatusMap] = useState<Record<string, string>>({});
+    const [statusFilter, setStatusFilter] = useState('');
+    const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' | 'warning' } | null>(null);
+
     useEffect(() => {
         try {
             const savedPrefs = localStorage.getItem('jobTrackerPreferences');
@@ -64,12 +68,24 @@ export default function Dashboard() {
             if (saved) {
                 setSavedJobIds(JSON.parse(saved));
             }
+
+            const savedStatus = localStorage.getItem('jobTrackerStatus');
+            if (savedStatus) {
+                setStatusMap(JSON.parse(savedStatus));
+            }
         } catch (error) {
             console.error('Dashboard initialization error:', error);
         } finally {
             setIsLoading(false);
         }
     }, []);
+
+    useEffect(() => {
+        if (toast) {
+            const timer = setTimeout(() => setToast(null), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast]);
 
     useEffect(() => {
         if (allJobs.length === 0 && !isLoading) return;
@@ -84,9 +100,15 @@ export default function Dashboard() {
             const matchesExperience = !experienceFilter || job.experience === experienceFilter;
             const matchesSource = !sourceFilter || job.source === sourceFilter;
 
+            const currentStatus = statusMap[job.id] || 'Not Applied';
+            const matchesStatus = !statusFilter || (
+                statusFilter === 'Not Applied' ? (!statusMap[job.id] || statusMap[job.id] === 'Not Applied') :
+                    currentStatus === statusFilter
+            );
+
             const matchesThreshold = !showOnlyAboveThreshold || job.matchScore >= (userPrefs?.minMatchScore || 0);
 
-            return matchesSearch && matchesLocation && matchesMode && matchesExperience && matchesSource && matchesThreshold;
+            return matchesSearch && matchesLocation && matchesMode && matchesExperience && matchesSource && matchesStatus && matchesThreshold;
         });
 
         // Sorting
@@ -107,7 +129,7 @@ export default function Dashboard() {
         }
 
         setFilteredJobs(result);
-    }, [allJobs, isLoading, search, locationFilter, modeFilter, experienceFilter, sourceFilter, sort, showOnlyAboveThreshold, userPrefs]);
+    }, [allJobs, isLoading, search, locationFilter, modeFilter, experienceFilter, sourceFilter, statusFilter, sort, showOnlyAboveThreshold, userPrefs, statusMap]);
 
     const handleSave = (id: string) => {
         const newSaved = savedJobIds.includes(id)
@@ -116,6 +138,32 @@ export default function Dashboard() {
 
         setSavedJobIds(newSaved);
         localStorage.setItem('favoriteJobIds', JSON.stringify(newSaved));
+    };
+
+    const handleStatusChange = (id: string, newStatus: string) => {
+        const newStatusMap = { ...statusMap, [id]: newStatus };
+        setStatusMap(newStatusMap);
+        localStorage.setItem('jobTrackerStatus', JSON.stringify(newStatusMap));
+
+        // Log update
+        const job = allJobs.find(j => j.id === id);
+        if (job) {
+            const logEntry = {
+                jobId: id,
+                title: job.title,
+                company: job.company,
+                status: newStatus,
+                date: new Date().toISOString()
+            };
+            const existingLog = JSON.parse(localStorage.getItem('jobTrackerStatusLog') || '[]');
+            const newLog = [logEntry, ...existingLog].slice(0, 50); // Keep last 50
+            localStorage.setItem('jobTrackerStatusLog', JSON.stringify(newLog));
+
+            setToast({
+                message: `Status updated to ${newStatus}`,
+                type: newStatus === 'Rejected' ? 'warning' : 'success'
+            });
+        }
     };
 
     const handleView = (job: Job) => {
@@ -164,6 +212,7 @@ export default function Dashboard() {
                             onModeChange={setModeFilter}
                             onExperienceChange={setExperienceFilter}
                             onSourceChange={setSourceFilter}
+                            onStatusChange={setStatusFilter}
                             onSortChange={setSort}
                         />
                         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', whiteSpace: 'nowrap', marginLeft: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
@@ -187,6 +236,9 @@ export default function Dashboard() {
                                     job={job}
                                     matchScore={job.matchScore}
                                     isSaved={savedJobIds.includes(job.id)}
+                                    // matchScore is already passed above
+                                    status={statusMap[job.id]}
+                                    onStatusChange={handleStatusChange}
                                     onView={handleView}
                                     onSave={handleSave}
                                     onApply={handleApply}
@@ -224,6 +276,24 @@ export default function Dashboard() {
                 onClose={() => setIsModalOpen(false)}
                 onApply={handleApply}
             />
+
+            {toast && (
+                <div style={{
+                    position: 'fixed',
+                    bottom: '24px',
+                    right: '24px',
+                    backgroundColor: 'white',
+                    color: toast.type === 'warning' ? '#C62828' : '#2D5016',
+                    padding: '12px 24px',
+                    borderRadius: '4px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    borderLeft: `4px solid ${toast.type === 'warning' ? '#C62828' : '#2D5016'}`,
+                    zIndex: 1000,
+                    animation: 'slideIn 0.3s ease-out'
+                }}>
+                    {toast.message}
+                </div>
+            )}
         </div>
     );
 }

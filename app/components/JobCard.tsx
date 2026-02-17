@@ -9,9 +9,11 @@ interface JobCardProps {
     onView: (job: Job) => void;
     onSave: (id: string) => void;
     onApply: (url: string) => void;
+    status?: string;
+    onStatusChange?: (id: string, status: string) => void;
 }
 
-export default function JobCard({ job, isSaved, matchScore, onView, onSave, onApply }: JobCardProps) {
+export default function JobCard({ job, isSaved, matchScore, onView, onSave, onApply, status, onStatusChange }: JobCardProps) {
     const getScoreColor = (score: number) => {
         if (score >= 80) return '#2D5016'; // Green
         if (score >= 60) return '#92400E'; // Amber
@@ -62,7 +64,37 @@ export default function JobCard({ job, isSaved, matchScore, onView, onSave, onAp
                 <span style={{ fontSize: '12px', color: '#999' }}>
                     {job.postedDaysAgo === 0 ? 'Posted today' : `Posted ${job.postedDaysAgo} days ago`}
                 </span>
-                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+
+                <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+                    {onStatusChange && (
+                        <div style={{ marginRight: 'var(--space-2)' }}>
+                            <select
+                                value={status || 'Not Applied'}
+                                onChange={(e) => onStatusChange(job.id, e.target.value)}
+                                style={{
+                                    padding: '4px 8px',
+                                    fontSize: '12px',
+                                    borderRadius: '4px',
+                                    border: '1px solid #ddd',
+                                    backgroundColor:
+                                        status === 'Applied' ? '#E3F2FD' :
+                                            status === 'Rejected' ? '#FFEBEE' :
+                                                status === 'Selected' ? '#E8F5E9' : 'white',
+                                    color:
+                                        status === 'Applied' ? '#1565C0' :
+                                            status === 'Rejected' ? '#C62828' :
+                                                status === 'Selected' ? '#2E7D32' : '#666',
+                                    fontWeight: 500
+                                }}
+                            >
+                                <option value="Not Applied">Not Applied</option>
+                                <option value="Applied">Applied</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Selected">Selected</option>
+                            </select>
+                        </div>
+                    )}
+
                     <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '13px' }} onClick={() => onView(job)}>View</button>
                     <button
                         className={`btn ${isSaved ? 'btn-primary' : 'btn-secondary'}`}

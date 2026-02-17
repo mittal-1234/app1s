@@ -17,15 +17,18 @@ export default function Saved() {
     const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [statusMap, setStatusMap] = useState<Record<string, string>>({});
 
     useEffect(() => {
         const saved = localStorage.getItem('favoriteJobIds');
-        const savedPrefs = localStorage.getItem('userPreferences');
+        const savedPrefs = localStorage.getItem('jobTrackerPreferences'); // Corrected key
         const prefs: UserPreferences = savedPrefs ? JSON.parse(savedPrefs) : {
-            keywords: '',
-            location: '',
-            mode: '',
-            experience: ''
+            roleKeywords: '',
+            preferredLocations: [],
+            preferredMode: [],
+            experienceLevel: '',
+            skills: '',
+            minMatchScore: 40
         };
 
         if (saved) {
@@ -41,6 +44,11 @@ export default function Saved() {
 
             setSavedJobs(filtered);
         }
+
+        const savedStatus = localStorage.getItem('jobTrackerStatus');
+        if (savedStatus) {
+            setStatusMap(JSON.parse(savedStatus));
+        }
     }, []);
 
     const handleSave = (id: string) => {
@@ -48,6 +56,27 @@ export default function Saved() {
         setSavedJobIds(newSavedIds);
         setSavedJobs(savedJobs.filter(job => job.id !== id));
         localStorage.setItem('favoriteJobIds', JSON.stringify(newSavedIds));
+    };
+
+    const handleStatusChange = (id: string, newStatus: string) => {
+        const newStatusMap = { ...statusMap, [id]: newStatus };
+        setStatusMap(newStatusMap);
+        localStorage.setItem('jobTrackerStatus', JSON.stringify(newStatusMap));
+
+        // Log update
+        const job = savedJobs.find(j => j.id === id);
+        if (job) {
+            const logEntry = {
+                jobId: id,
+                title: job.title,
+                company: job.company,
+                status: newStatus,
+                date: new Date().toISOString()
+            };
+            const existingLog = JSON.parse(localStorage.getItem('jobTrackerStatusLog') || '[]');
+            const newLog = [logEntry, ...existingLog].slice(0, 50);
+            localStorage.setItem('jobTrackerStatusLog', JSON.stringify(newLog));
+        }
     };
 
     const handleView = (job: Job) => {
@@ -75,6 +104,8 @@ export default function Saved() {
                                     job={job}
                                     matchScore={job.matchScore}
                                     isSaved={true}
+                                    status={statusMap[job.id]}
+                                    onStatusChange={handleStatusChange}
                                     onView={handleView}
                                     onSave={handleSave}
                                     onApply={handleApply}

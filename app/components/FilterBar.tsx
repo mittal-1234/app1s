@@ -6,6 +6,7 @@ interface FilterBarProps {
     onModeChange: (value: string) => void;
     onExperienceChange: (value: string) => void;
     onSourceChange: (value: string) => void;
+    onStatusChange?: (value: string) => void;
     onSortChange: (value: string) => void;
 }
 
@@ -15,6 +16,7 @@ export default function FilterBar({
     onModeChange,
     onExperienceChange,
     onSourceChange,
+    onStatusChange,
     onSortChange
 }: FilterBarProps) {
     return (
@@ -71,6 +73,17 @@ export default function FilterBar({
                         <option value="LinkedIn">LinkedIn</option>
                         <option value="Naukri">Naukri</option>
                         <option value="Indeed">Indeed</option>
+                    </select>
+                </div>
+
+                <div className="form-group">
+                    <label>Status</label>
+                    <select onChange={(e) => onStatusChange && onStatusChange(e.target.value)}>
+                        <option value="">All Statuses</option>
+                        <option value="Not Applied">Not Applied</option>
+                        <option value="Applied">Applied</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="Selected">Selected</option>
                     </select>
                 </div>
 

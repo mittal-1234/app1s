@@ -190,3 +190,62 @@ export default function Digest() {
         </div>
     );
 }
+
+function StatusUpdatesList() {
+    const [updates, setUpdates] = useState<any[]>([]);
+
+    useEffect(() => {
+        const log = localStorage.getItem('jobTrackerStatusLog');
+        if (log) {
+            try {
+                setUpdates(JSON.parse(log).slice(0, 5));
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    }, []);
+
+    if (updates.length === 0) {
+        return (
+            <div className="card" style={{ padding: 'var(--space-3)', color: '#666', fontStyle: 'italic' }}>
+                No recent updates. Track your applications to see history here.
+            </div>
+        );
+    }
+
+    return (
+        <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
+            {updates.map((update, index) => (
+                <div key={index} style={{
+                    padding: 'var(--space-3)',
+                    borderBottom: index < updates.length - 1 ? '1px solid #f0f0f0' : 'none',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                }}>
+                    <div>
+                        <div style={{ fontWeight: 600, fontSize: '14px' }}>{update.title}</div>
+                        <div style={{ fontSize: '12px', color: '#666' }}>{update.company}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                        <span className="badge" style={{
+                            backgroundColor:
+                                update.status === 'Applied' ? '#E3F2FD' :
+                                    update.status === 'Rejected' ? '#FFEBEE' :
+                                        update.status === 'Selected' ? '#E8F5E9' : '#f5f5f5',
+                            color:
+                                update.status === 'Applied' ? '#1565C0' :
+                                    update.status === 'Rejected' ? '#C62828' :
+                                        update.status === 'Selected' ? '#2E7D32' : '#666',
+                        }}>
+                            {update.status}
+                        </span>
+                        <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+                            {new Date(update.date).toLocaleDateString()}
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
