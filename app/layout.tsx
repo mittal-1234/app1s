@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import TopBar from "./components/TopBar";
-import ProofFooter from "./components/ProofFooter";
+import ClientLayout from "./ClientLayout";
 
 export const metadata: Metadata = {
   title: "KodNest Premium Build System",
@@ -16,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        {children}
+        <ClientLayout>
+          {children}
+        </ClientLayout>
       </body>
     </html>
   );

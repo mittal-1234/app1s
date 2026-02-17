@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import TopBar from '../components/TopBar';
-import ProofFooter from '../components/ProofFooter';
+import TopBar from './components/TopBar';
+import ProofFooter from './components/ProofFooter';
 
-export default function MainLayout({
+export default function ClientLayout({
     children,
 }: {
     children: React.ReactNode;

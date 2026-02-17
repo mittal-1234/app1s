@@ -1,6 +1,8 @@
+'use client';
+
 import Link from 'next/link';
-import ContextHeader from '../components/ContextHeader';
-import SecondaryPanel from '../components/SecondaryPanel';
+import ContextHeader from './components/ContextHeader';
+import SecondaryPanel from './components/SecondaryPanel';
 
 export default function Home() {
   return (

@@ -1,5 +1,7 @@
-import ContextHeader from '../../components/ContextHeader';
-import SecondaryPanel from '../../components/SecondaryPanel';
+'use client';
+
+import ContextHeader from '../components/ContextHeader';
+import SecondaryPanel from '../components/SecondaryPanel';
 
 export default function Digest() {
     return (
